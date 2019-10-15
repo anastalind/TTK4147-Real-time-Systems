@@ -9,6 +9,7 @@
 
 #include "io.h"
 
+
 /// Assigning CPU core ///
 
 int set_cpu(int cpu_number){
@@ -45,6 +46,11 @@ void* task_A_test(void *args) {
 
     set_cpu(1);
 
+    struct timespec waketime;
+    clock_gettime(CLOCK_REALTIME, &waketime);
+
+    struct timespec period = {.tv_sec = 0, .tv_nsec = 1};
+
     int *which_task = (int*) args; // 
     while (1){
         if (io_read(1) == 0) {
@@ -52,6 +58,8 @@ void* task_A_test(void *args) {
             usleep(5);
             io_write(1,1);
         }
+        waketime = timespec_add(waketime, period);
+        clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &waketime, NULL);
     }
     //printf("Thread id: %s \n", (char*)which_task);
 
@@ -62,6 +70,11 @@ void* task_B_test(void *args) {
 
     set_cpu(1);
 
+    struct timespec waketime;
+    clock_gettime(CLOCK_REALTIME, &waketime);
+
+    struct timespec period = {.tv_sec = 0, .tv_nsec = 1};
+
     int *which_task = (int*) args; // 
     while (1){
         if (io_read(2) == 0) {
@@ -69,6 +82,8 @@ void* task_B_test(void *args) {
             usleep(5);
             io_write(2,1);
         }
+        waketime = timespec_add(waketime, period);
+        clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &waketime, NULL);
     }
     //printf("Thread id: %s \n", (char*)which_task);
     
@@ -79,6 +94,11 @@ void* task_C_test(void *args) {
 
     set_cpu(1);
 
+    struct timespec waketime;
+    clock_gettime(CLOCK_REALTIME, &waketime);
+
+    struct timespec period = {.tv_sec = 0, .tv_nsec = 1};
+
     int *which_task = (int*) args; // 
     while (1){
         if (io_read(3) == 0) {
@@ -86,6 +106,9 @@ void* task_C_test(void *args) {
             usleep(5);
             io_write(3,1);
         }
+
+        waketime = timespec_add(waketime, period);
+        clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &waketime, NULL);
     }
     //printf("Thread id: %s \n", (char*)which_task);
 
@@ -98,8 +121,9 @@ void* disturbance(void *args) {
 
     int *which_task = (int*) args;
     while (1){
-       asm volatile("" ::: "memory");
-        }
+        asm volatile("" ::: "memory");
+
+    }
     return NULL;
 }
 
@@ -108,18 +132,13 @@ int main(){
     // Initialize input/ouput on lab-computer
     io_init();
 
+    
     for (int i=0; i<10; i++){
         pthread_t i;
         pthread_create(&i, NULL, disturbance, "Task "+i);
     }
-/*
-    while(1)
-    {
-        io_write(1,0);
-        sleep(1);
-        io_write(1,1);
-        sleep(1);
-    }*/
+    
+    
 
     //Create threads (philosophers)
     pthread_t taskA, taskB, taskC;
@@ -132,7 +151,12 @@ int main(){
     pthread_join(taskB, NULL); 
     pthread_join(taskC, NULL);
 
+    
     for (int i=0; i<10; i++){
         pthread_join(i, NULL);
     }
+
+    
 }
+
+
