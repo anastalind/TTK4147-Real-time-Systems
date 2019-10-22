@@ -5,7 +5,6 @@
 #include <time.h>
 #include <sched.h>
 #include <unistd.h>
-#include <sched.h>
 
 #include "io.h"
 
